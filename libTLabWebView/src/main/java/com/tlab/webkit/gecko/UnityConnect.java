@@ -24,12 +24,16 @@ import com.tlab.webkit.Common.*;
 import com.tlab.widget.AlertDialog;
 import com.unity3d.player.UnityPlayer;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.OffscreenGeckoView;
+import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebRequest;
 import org.mozilla.geckoview.WebRequestError;
 import org.mozilla.geckoview.WebResponse;
@@ -164,6 +168,47 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
                 settings.setUserAgentOverride(mSessionState.userAgent);
 
             mRootLayout.addView(mWebView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+            // https://firefox-source-docs.mozilla.org/mobile/android/geckoview/consumer/web-extensions.html
+            WebExtension.MessageDelegate messageDelegate =
+                    new WebExtension.MessageDelegate() {
+                        @Nullable
+                        @Override
+                        public GeckoResult<Object> onMessage(
+                                final @NonNull String nativeApp,
+                                final @NonNull Object message,
+                                final @NonNull WebExtension.MessageSender sender) {
+                            JSONObject json = (JSONObject) message;
+                            try {
+                                switch (json.getString("method")) {
+                                    case "unitySendMessage":
+                                        JSONObject payload = json.getJSONObject("payload");
+                                        UnityPlayer.UnitySendMessage(payload.getString("go"), payload.getString("method"), payload.getString("message"));
+                                        break;
+                                }
+                            } catch (JSONException ex) {
+                                Log.e("MessageDelegate", "Invalid message", ex);
+                            }
+                            return null;
+                        }
+                    };
+            mRuntime.getWebExtensionController()
+                    .ensureBuiltIn("resource://android/assets/messaging/", "messaging@example.com")
+                    .accept(
+                            // Set delegate that will receive messages coming from this extension.
+                            extension ->
+                                    ThreadUtils.runOnUiThread(
+                                            new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    assert extension != null;
+                                                    mSession
+                                                            .getWebExtensionController()
+                                                            .setMessageDelegate(extension, messageDelegate, "browser");
+                                                }
+                                            }),
+                            // Something bad happened, let's log an error
+                            e -> Log.e("MessageDelegate", "Error registering extension " + e.getMessage(), e));
 
             mSession.open(mRuntime);
             mWebView.setSession(mSession);
