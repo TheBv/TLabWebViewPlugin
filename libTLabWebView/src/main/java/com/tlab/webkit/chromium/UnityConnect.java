@@ -18,6 +18,8 @@ import android.view.ViewGroup;
 import android.webkit.ConsoleMessage;
 import android.webkit.CookieManager;
 
+import com.tlab.viewtobuffer.ViewToBufferLayout;
+import com.tlab.viewtobuffer.ViewToSurfaceLayout;
 import com.tlab.webkit.Common;
 import com.tlab.webkit.IBrowser;
 import com.tlab.webkit.Common.*;
@@ -257,7 +259,7 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
             init();
 
             if (mWebView == null) {
-                mWebView = new WebView(a);
+                mWebView = new OffscreenWebView(a);
                 mView = mWebView;
             }
 
@@ -861,6 +863,60 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
         a.runOnUiThread(() -> {
             if (mWebView == null) return;
             mWebView.loadDataWithBaseURL(baseURL, html, "text/html", "UTF8", null);
+        });
+    }
+
+    /**
+     * Set content's scroll position.
+     * Uses JavaScript scrolling with View following.
+     *
+     * @param x Scroll position x of the destination
+     * @param y Scroll position y of the destination
+     */
+    @Override
+    public void ScrollTo(int x, int y) {
+        final Activity a = UnityPlayer.currentActivity;
+        a.runOnUiThread(() -> {
+            if (mWebView == null) return;
+            
+            // Mark this as programmatic (user-initiated via button) scrolling
+            if (mWebView instanceof OffscreenWebView) {
+                ((OffscreenWebView) mWebView).beginProgrammaticScroll();
+            }
+            
+            // Use JavaScript to scroll - it respects content boundaries
+            // The View will automatically follow via Chromium's internal sync
+            mWebView.evaluateJavascript(
+                "window.scrollTo(" + x + ", " + y + ");",
+                null
+            );
+        });
+    }
+
+    /**
+     * Move the scrolled position of WebView.
+     * Uses JavaScript scrolling with View following.
+     *
+     * @param x The amount of pixels to scroll by horizontally
+     * @param y The amount of pixels to scroll by vertically
+     */
+    @Override
+    public void ScrollBy(int x, int y) {
+        final Activity a = UnityPlayer.currentActivity;
+        a.runOnUiThread(() -> {
+            if (mWebView == null) return;
+            
+            // Mark this as programmatic (user-initiated via button) scrolling
+            if (mWebView instanceof OffscreenWebView) {
+                ((OffscreenWebView) mWebView).beginProgrammaticScroll();
+            }
+            
+            // Use JavaScript to scroll - it respects content boundaries
+            // The View will automatically follow via Chromium's internal sync
+            mWebView.evaluateJavascript(
+                "window.scrollBy(" + x + ", " + y + ");",
+                null
+            );
         });
     }
 

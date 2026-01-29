@@ -545,6 +545,30 @@ public class UnityConnect extends OffscreenBrowser implements IBrowser {
         });
     }
 
+    /**
+     * Set content's scroll position using JavaScript for proper content scrolling.
+     * This overrides the base implementation to use window.scrollTo which respects content bounds.
+     *
+     * @param x Scroll position x of the destination
+     * @param y Scroll position y of the destination
+     */
+    @Override
+    public void ScrollTo(int x, int y) {
+        EvaluateJS("window.scrollTo(" + x + ", " + y + ");");
+    }
+
+    /**
+     * Move the scrolled position of WebView using JavaScript for proper content scrolling.
+     * This overrides the base implementation to use window.scrollBy which respects content bounds.
+     *
+     * @param x The amount of pixels to scroll by horizontally
+     * @param y The amount of pixels to scroll by vertically
+     */
+    @Override
+    public void ScrollBy(int x, int y) {
+        EvaluateJS("window.scrollBy(" + x + ", " + y + ");");
+    }
+
     public void GoBack() {
         final Activity a = UnityPlayer.currentActivity;
         a.runOnUiThread(() -> {
