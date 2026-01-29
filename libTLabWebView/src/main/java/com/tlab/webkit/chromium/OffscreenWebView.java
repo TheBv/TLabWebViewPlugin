@@ -19,7 +19,7 @@ import android.webkit.WebViewClient;
 public class OffscreenWebView extends WebView {
 
     private static final String TAG = "OffscreenWebView";
-    private static final boolean DEBUG_SCROLL = false;
+    private static final boolean DEBUG_SCROLL = true;
 
     public OffscreenWebView(Context context) {
         super(context);
@@ -64,7 +64,7 @@ public class OffscreenWebView extends WebView {
     // Track programmatic scrolling to distinguish user scrolling from focus-induced scrolling
     private boolean mIsProgrammaticScroll = false;
     private long mProgrammaticScrollEndTime = 0;
-    private static final long PROGRAMMATIC_SCROLL_WINDOW_MS = 150;
+    private static final long PROGRAMMATIC_SCROLL_WINDOW_MS = 200; // Allow scroll events for 200ms after programmatic scroll
     
     // Track when we're reverting to prevent feedback loop
     private boolean mIsReverting = false;
@@ -170,7 +170,7 @@ public class OffscreenWebView extends WebView {
         // But if the scroll went to 0 and we're far from 0, this might be a page reload
         if (absDeltaY > 0) {
             // If we scrolled to position 0 and we were far away, this is likely a page reset
-            if (t == 0 && mStableScrollY > 50) {
+            if (t == 0 && mStableScrollY > 100) {
                 if (DEBUG_SCROLL) {
                     Log.d(TAG, "Detected scroll to 0 from " + mStableScrollY + " - accepting as page reset");
                 }

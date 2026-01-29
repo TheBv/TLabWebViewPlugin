@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 public class ViewToBufferLayout extends LinearLayout {
 
     private static final String TAG = "ViewToBufferLayout";
-    private static final boolean DEBUG_RENDER = true;
+    private static final boolean DEBUG_RENDER = false;
     private final ViewToBufferRenderer mRenderer;
 
     public ViewToBufferLayout(Context context, ViewToBufferRenderer renderer) {
